@@ -1,0 +1,46 @@
+---
+replicaCount: 1
+
+image:
+  repository: nginx
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: "nginx-example-app"
+fullnameOverride: "nginx-example"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: nginx-sa
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 30007
+
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: nginx.local
+      paths: []
+  tls: []
+
+resources: {}
+   limits:
+     cpu: 100m
+     memory: 128Mi
+   requests:
+     cpu: 100m
+     memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

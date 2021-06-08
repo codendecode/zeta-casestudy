@@ -1,0 +1,64 @@
+---
+
+- name: Install docker packages
+  apt:
+    name: "{{ item }}"
+    state: present
+    update_cache: yes
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+
+- name: Install, configure, and start Docker if env is not Docker
+  block:
+    - name: Add APT/GPG Key for Docker Repository
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        id: 0EBFCD88
+        state: present
+
+    - name: Add Docker Repository to APT Sources
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        state: present
+        filename: docker
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install Docker
+      apt:
+        name: "{{ packages }}"
+        allow_unauthenticated: yes
+      vars:
+        packages:
+          - docker-ce={{ DOCKER_VERSION }}
+          - docker-ce-cli={{ DOCKER_VERSION }}
+
+    - name: Update /lib/systemd/system/docker.service
+      copy:
+        src: docker.service
+        dest: /lib/systemd/system/docker.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create "docker" group
+      group:
+        name: "{{ docker_group }}"
+        state: present
+
+    - name: Add remote "ubuntu" user to "docker" group
+      user:
+        name: "{{ remote_user }}"
+        group: "{{ docker_group }}"
+        append: yes
+
+    - name: Restart docker service
+      systemd:
+        name: docker
+        state: restarted
+        daemon_reload: yes
